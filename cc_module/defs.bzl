@@ -26,13 +26,11 @@ DISABLED_FEATURES = [
 def _cc_module_impl(ctx):
     cc_toolchain = find_cpp_toolchain(ctx)
     source_file = ctx.file.src
-    output_file = ctx.actions.declare_file(ctx.label.name + ".o")
-    output_cmi_dir = ctx.actions.declare_directory("gcm.cache", sibling=output_file)
-    output_cmi = ctx.actions.declare_directory("gcm.cache/%s.gcm" % ctx.attr.module_name, sibling=output_file)
-    # output_cmi = ctx.actions.declare_file(ctx.attr.module_name + ".gcm", sibling=output_cmi_dir)
-    # output_cmi = ctx.actions.declare_file("gcm.cache/" + ctx.attr.module_name +".gcm")
-    # output_cmi = ctx.actions.declare_file(ctx.attr.module_name +".gcm")
-    # output_cmi_dir = ctx.actions.declare_directory("gcm.cache", sibling=output_cmi)
+    output_file = ctx.actions.declare_file(source_file.basename + ".o")
+
+    # output_cmi_dir = ctx.actions.declare_directory("gcm.cache", sibling=output_file)
+    output_cmi = ctx.actions.declare_file(ctx.label.name + ".gcm", sibling=output_file)
+
     feature_configuration = cc_common.configure_features(
         ctx = ctx,
         cc_toolchain = cc_toolchain,
@@ -61,15 +59,21 @@ def _cc_module_impl(ctx):
         variables = c_compile_variables,
     )
 
+    copy_args = [
+        "--copy-output",
+        "gcm.cache/%s.gcm" % ctx.label.name,
+        output_cmi.path,
+    ]
+
     ctx.actions.run(
-        executable = c_compiler_path,
-        arguments = command_line,
+        executable = ctx.executable._process_wrapper,
+        arguments = copy_args + ["--", c_compiler_path] + command_line,
         env = env,
         inputs = depset(
             [source_file],
             transitive = [cc_toolchain.all_files],
         ),
-        outputs = [output_file, output_cmi_dir, output_cmi],
+        outputs = [output_file, output_cmi],
     )
     return [
         DefaultInfo(files = depset([output_file])),
@@ -80,8 +84,13 @@ cc_module = rule(
     implementation = _cc_module_impl,
     attrs = {
         "src": attr.label(mandatory = True, allow_single_file = True),
-        "module_name": attr.string(mandatory = True),
         "_cc_toolchain": attr.label(default = Label("@bazel_tools//tools/cpp:current_cc_toolchain")),
+        "_process_wrapper": attr.label(
+            default = Label("//util/process_wrapper"),
+            executable = True,
+            allow_single_file = True,
+            cfg = "exec",
+        )
     },
     toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
     incompatible_use_toolchain_transition = True,

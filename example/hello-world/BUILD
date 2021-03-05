@@ -19,7 +19,6 @@ load("//cc_module:defs.bzl", "cc_module")
 licenses(["notice"])
 
 cc_module(
-    name = "say_hello",
+    name = "Hello",
     src = "say_hello.cc",
-    module_name = "SayHello",
 )
