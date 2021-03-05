@@ -1,5 +1,5 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
-load("//:my_c_compile.bzl", "my_c_compile")
+load("//cc_module:defs.bzl", "my_c_compile")
 
 # Copyright 2019 The Bazel Authors. All rights reserved.
 #
@@ -19,13 +19,7 @@ load("//:my_c_compile.bzl", "my_c_compile")
 licenses(["notice"])
 
 my_c_compile(
-    name = "foo",
-    src = "foo.cc",
+    name = "say_hello",
+    src = "say_hello.cc",
     module_name = "SayHello",
-)
-
-bzl_library(
-    name = "my_c_compile_bzl",
-    srcs = ["my_c_compile.bzl"],
-    visibility = ["//visibility:private"],
 )
