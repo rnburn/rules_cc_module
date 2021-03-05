@@ -27,6 +27,12 @@ def _my_c_compile_impl(ctx):
     cc_toolchain = find_cpp_toolchain(ctx)
     source_file = ctx.file.src
     output_file = ctx.actions.declare_file(ctx.label.name + ".o")
+    output_cmi_dir = ctx.actions.declare_directory("gcm.cache", sibling=output_file)
+    output_cmi = ctx.actions.declare_directory("gcm.cache/%s.gcm" % ctx.attr.module_name, sibling=output_file)
+    # output_cmi = ctx.actions.declare_file(ctx.attr.module_name + ".gcm", sibling=output_cmi_dir)
+    # output_cmi = ctx.actions.declare_file("gcm.cache/" + ctx.attr.module_name +".gcm")
+    # output_cmi = ctx.actions.declare_file(ctx.attr.module_name +".gcm")
+    # output_cmi_dir = ctx.actions.declare_directory("gcm.cache", sibling=output_cmi)
     feature_configuration = cc_common.configure_features(
         ctx = ctx,
         cc_toolchain = cc_toolchain,
@@ -40,7 +46,7 @@ def _my_c_compile_impl(ctx):
     c_compile_variables = cc_common.create_compile_variables(
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
-        user_compile_flags = ctx.fragments.cpp.copts + ctx.fragments.cpp.conlyopts,
+        user_compile_flags = ctx.fragments.cpp.copts + ctx.fragments.cpp.conlyopts + ["-fmodules-ts", "-std=c++20"],
         source_file = source_file.path,
         output_file = output_file.path,
     )
@@ -63,7 +69,7 @@ def _my_c_compile_impl(ctx):
             [source_file],
             transitive = [cc_toolchain.all_files],
         ),
-        outputs = [output_file],
+        outputs = [output_file, output_cmi_dir, output_cmi],
     )
     return [
         DefaultInfo(files = depset([output_file])),
@@ -74,6 +80,7 @@ my_c_compile = rule(
     implementation = _my_c_compile_impl,
     attrs = {
         "src": attr.label(mandatory = True, allow_single_file = True),
+        "module_name": attr.string(mandatory = True),
         "_cc_toolchain": attr.label(default = Label("@bazel_tools//tools/cpp:current_cc_toolchain")),
     },
     toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],

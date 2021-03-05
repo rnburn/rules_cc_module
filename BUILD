@@ -20,7 +20,8 @@ licenses(["notice"])
 
 my_c_compile(
     name = "foo",
-    src = "foo.c",
+    src = "foo.cc",
+    module_name = "SayHello",
 )
 
 bzl_library(
