@@ -23,7 +23,7 @@ DISABLED_FEATURES = [
 #     "module_maps",  # copybara-comment-this-out-please
 ]
 
-def _my_c_compile_impl(ctx):
+def _cc_module_impl(ctx):
     cc_toolchain = find_cpp_toolchain(ctx)
     source_file = ctx.file.src
     output_file = ctx.actions.declare_file(ctx.label.name + ".o")
@@ -76,8 +76,8 @@ def _my_c_compile_impl(ctx):
         MyCCompileInfo(object = output_file),
     ]
 
-my_c_compile = rule(
-    implementation = _my_c_compile_impl,
+cc_module = rule(
+    implementation = _cc_module_impl,
     attrs = {
         "src": attr.label(mandatory = True, allow_single_file = True),
         "module_name": attr.string(mandatory = True),

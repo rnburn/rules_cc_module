@@ -1,5 +1,5 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
-load("//cc_module:defs.bzl", "my_c_compile")
+load("//cc_module:defs.bzl", "cc_module")
 
 # Copyright 2019 The Bazel Authors. All rights reserved.
 #
@@ -18,7 +18,7 @@ load("//cc_module:defs.bzl", "my_c_compile")
 # Example showing how to create a custom Starlark rule that just compiles C sources
 licenses(["notice"])
 
-my_c_compile(
+cc_module(
     name = "say_hello",
     src = "say_hello.cc",
     module_name = "SayHello",
