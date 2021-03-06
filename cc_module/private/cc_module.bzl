@@ -15,20 +15,25 @@
 load("//cc_module/private:cc_module_compile.bzl", "cc_module_compile_action")
 
 def _cc_module_impl(ctx):
-  return cc_module_compile_action(ctx, module_output=ctx.label.name)
+  return cc_module_compile_action(ctx, src=ctx.file.src, module_output=ctx.label.name)
+
+_common_attrs = {
+  "_cc_toolchain": attr.label(default = Label("@bazel_tools//tools/cpp:current_cc_toolchain")),
+  "_process_wrapper": attr.label(
+      default = Label("//util/process_wrapper"),
+      executable = True,
+      allow_single_file = True,
+      cfg = "exec",
+  )
+}
+
+_cc_module_attrs = {
+  "src": attr.label(mandatory = True, allow_single_file = True),
+}
 
 cc_module = rule(
     implementation = _cc_module_impl,
-    attrs = {
-        "src": attr.label(mandatory = True, allow_single_file = True),
-        "_cc_toolchain": attr.label(default = Label("@bazel_tools//tools/cpp:current_cc_toolchain")),
-        "_process_wrapper": attr.label(
-            default = Label("//util/process_wrapper"),
-            executable = True,
-            allow_single_file = True,
-            cfg = "exec",
-        )
-    },
+    attrs = dict(_common_attrs.items() + _cc_module_attrs.items()),
     toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
     incompatible_use_toolchain_transition = True,
     fragments = ["cpp"],

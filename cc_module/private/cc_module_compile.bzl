@@ -21,10 +21,9 @@ def replace_extension(f, new_ext):
   ext = f.extension
   return f.basename[:-len(ext)]  + new_ext
 
-def cc_module_compile_action(ctx, module_output=None):
+def cc_module_compile_action(ctx, src, module_output=None):
     cc_toolchain = find_cpp_toolchain(ctx)
-    source_file = ctx.file.src
-    output_file = ctx.actions.declare_file(replace_extension(source_file, "o"))
+    obj = ctx.actions.declare_file(replace_extension(src, "o"))
 
 
     feature_configuration = cc_common.configure_features(
@@ -41,8 +40,8 @@ def cc_module_compile_action(ctx, module_output=None):
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
         user_compile_flags = ctx.fragments.cpp.copts + ctx.fragments.cpp.conlyopts + ["-fmodules-ts", "-std=c++20"],
-        source_file = source_file.path,
-        output_file = output_file.path,
+        source_file = src.path,
+        output_file = obj.path,
     )
     command_line = cc_common.get_memory_inefficient_command_line(
         feature_configuration = feature_configuration,
@@ -57,7 +56,7 @@ def cc_module_compile_action(ctx, module_output=None):
 
     module_outputs = []
     if module_output:
-      output_cmi = ctx.actions.declare_file(module_output + ".gcm", sibling=output_file)
+      output_cmi = ctx.actions.declare_file(module_output + ".gcm")
       copy_args = [
           "--copy-output",
           "gcm.cache/%s.gcm" % module_output,
@@ -70,12 +69,12 @@ def cc_module_compile_action(ctx, module_output=None):
         arguments = copy_args + ["--", c_compiler_path] + command_line,
         env = env,
         inputs = depset(
-            [source_file],
+            [src],
             transitive = [cc_toolchain.all_files],
         ),
-        outputs = [output_file] + module_outputs,
+        outputs = [obj] + module_outputs,
     )
     return [
-        DefaultInfo(files = depset([output_file])),
-        MyCCompileInfo(object = output_file),
+        DefaultInfo(files = depset([obj])),
+        MyCCompileInfo(object = obj),
     ]
