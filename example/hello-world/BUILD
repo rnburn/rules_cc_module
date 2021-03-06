@@ -29,3 +29,10 @@ cc_module_binary(
         "main.cc",
     ],
 )
+
+# cc_binary(
+#     name = "h",
+#     srcs = [
+#         "main.cc",
+#     ],
+# )
