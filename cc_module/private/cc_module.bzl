@@ -23,14 +23,17 @@ _common_attrs = {
       executable = True,
       allow_single_file = True,
       cfg = "exec",
-  )
+  ),
+  "deps": attr.label_list(),
 }
 
 ###########################################################################################
 # cc_module
 ###########################################################################################
 def _cc_module_impl(ctx):
-  return cc_module_compile_action(ctx, src=ctx.file.src, module_output=ctx.label.name)
+  return cc_module_compile_action(ctx, src=ctx.file.src, 
+                                  deps=ctx.attr.deps, 
+                                  module_output=ctx.label.name)
 
 _cc_module_attrs = {
   "src": attr.label(mandatory = True, allow_single_file = True),
@@ -50,7 +53,7 @@ cc_module = rule(
 def  _cc_module_binary_impl(ctx):
   objs = []
   for src in ctx.files.srcs:
-    output_info = cc_module_compile_action(ctx, src=src)
+    output_info = cc_module_compile_action(ctx, src=src, deps=ctx.attr.deps)
     objs.append(output_info[1].object)
   return cc_module_link_action(ctx, objs, ctx.label.name)
 

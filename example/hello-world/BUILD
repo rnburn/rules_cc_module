@@ -28,6 +28,9 @@ cc_module_binary(
     srcs = [
         "main.cc",
     ],
+    deps = [
+        ":Hello",
+    ],
 )
 
 # cc_binary(

@@ -21,8 +21,34 @@ def replace_extension(f, new_ext):
   ext = f.extension
   return f.basename[:-len(ext)]  + new_ext
 
-def cc_module_compile_action(ctx, src, module_output=None):
+def get_dep_info(deps):
+  headers = []
+  includes = []
+  quote_includes = []
+  system_includes = []
+  modules = []
+  for dep in deps:
+    if CcInfo in dep:
+      cc = dep[CcInfo].compilation_context
+      headers += cc.headers
+      includes += cc.includes
+      quote_includes += cc.quote_includes
+      system_includes += cc.system_includes
+    elif ModuleCompileInfo in dep:
+      ci = dep[ModuleCompileInfo]
+      modules.append(ci.module)
+  return {
+      'headers' : depset(headers),
+      'includes' : depset(includes),
+      'quote_includes' : depset(quote_includes),
+      'system_includes': depset(system_includes),
+      'modules': modules,
+  }
+
+def cc_module_compile_action(ctx, src, deps, module_output=None):
     cc_toolchain = find_cpp_toolchain(ctx)
+
+    dep_info = get_dep_info(deps)
 
     obj = ctx.actions.declare_file(replace_extension(src, "o"))
 
@@ -40,6 +66,9 @@ def cc_module_compile_action(ctx, src, module_output=None):
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
         user_compile_flags = ctx.fragments.cpp.copts + ctx.fragments.cpp.conlyopts + ["-fmodules-ts", "-std=c++20"],
+        include_directories = dep_info['includes'],
+        quote_include_directories = dep_info['quote_includes'],
+        system_include_directories = dep_info['system_includes'],
         source_file = src.path,
         output_file = obj.path,
     )
@@ -72,7 +101,7 @@ def cc_module_compile_action(ctx, src, module_output=None):
         arguments = copy_args + ["--", c_compiler_path] + command_line,
         env = env,
         inputs = depset(
-            [src],
+            [src] + dep_info['headers'].to_list(),
             transitive = [cc_toolchain.all_files],
         ),
         outputs = [obj] + module_outputs,
