@@ -21,13 +21,11 @@ def replace_extension(f, new_ext):
   ext = f.extension
   return f.basename[:-len(ext)]  + new_ext
 
-def cc_module_compile_action(ctx):
+def cc_module_compile_action(ctx, module_output=None):
     cc_toolchain = find_cpp_toolchain(ctx)
     source_file = ctx.file.src
     output_file = ctx.actions.declare_file(replace_extension(source_file, "o"))
 
-    # output_cmi_dir = ctx.actions.declare_directory("gcm.cache", sibling=output_file)
-    output_cmi = ctx.actions.declare_file(ctx.label.name + ".gcm", sibling=output_file)
 
     feature_configuration = cc_common.configure_features(
         ctx = ctx,
@@ -57,11 +55,15 @@ def cc_module_compile_action(ctx):
         variables = c_compile_variables,
     )
 
-    copy_args = [
-        "--copy-output",
-        "gcm.cache/%s.gcm" % ctx.label.name,
-        output_cmi.path,
-    ]
+    module_outputs = []
+    if module_output:
+      output_cmi = ctx.actions.declare_file(module_output + ".gcm", sibling=output_file)
+      copy_args = [
+          "--copy-output",
+          "gcm.cache/%s.gcm" % module_output,
+          output_cmi.path,
+      ]
+      module_outputs.append(output_cmi)
 
     ctx.actions.run(
         executable = ctx.executable._process_wrapper,
@@ -71,7 +73,7 @@ def cc_module_compile_action(ctx):
             [source_file],
             transitive = [cc_toolchain.all_files],
         ),
-        outputs = [output_file, output_cmi],
+        outputs = [output_file] + module_outputs,
     )
     return [
         DefaultInfo(files = depset([output_file])),

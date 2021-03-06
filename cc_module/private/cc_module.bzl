@@ -12,18 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_cc//cc:action_names.bzl", "CPP_COMPILE_ACTION_NAME")
-load("@rules_cc//cc:toolchain_utils.bzl", "find_cpp_toolchain")
 load("//cc_module/private:cc_module_compile.bzl", "cc_module_compile_action")
 
-MyCCompileInfo = provider(doc = "", fields = ["object"])
-
-DISABLED_FEATURES = [
-#     "module_maps",  # copybara-comment-this-out-please
-]
-
 def _cc_module_impl(ctx):
-  return cc_module_compile_action(ctx)
+  return cc_module_compile_action(ctx, module_output=ctx.label.name)
 
 cc_module = rule(
     implementation = _cc_module_impl,
