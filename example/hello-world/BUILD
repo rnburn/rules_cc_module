@@ -1,5 +1,5 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
-load("//cc_module:defs.bzl", "cc_module")
+load("//cc_module:defs.bzl", "cc_module", "cc_module_binary")
 
 # Copyright 2019 The Bazel Authors. All rights reserved.
 #
@@ -21,4 +21,11 @@ licenses(["notice"])
 cc_module(
     name = "Hello",
     src = "say_hello.cc",
+)
+
+cc_module_binary(
+    name = "h",
+    srcs = [
+        "main.cc",
+    ],
 )

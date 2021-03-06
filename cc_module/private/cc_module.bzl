@@ -13,9 +13,8 @@
 # limitations under the License.
 
 load("//cc_module/private:cc_module_compile.bzl", "cc_module_compile_action")
-
-def _cc_module_impl(ctx):
-  return cc_module_compile_action(ctx, src=ctx.file.src, module_output=ctx.label.name)
+load("//cc_module/private:cc_module_link.bzl", "cc_module_link_action")
+load("//cc_module/private:provider.bzl", "ModuleCompileInfo")
 
 _common_attrs = {
   "_cc_toolchain": attr.label(default = Label("@bazel_tools//tools/cpp:current_cc_toolchain")),
@@ -26,6 +25,12 @@ _common_attrs = {
       cfg = "exec",
   )
 }
+
+###########################################################################################
+# cc_module
+###########################################################################################
+def _cc_module_impl(ctx):
+  return cc_module_compile_action(ctx, src=ctx.file.src, module_output=ctx.label.name)
 
 _cc_module_attrs = {
   "src": attr.label(mandatory = True, allow_single_file = True),
@@ -39,3 +44,24 @@ cc_module = rule(
     fragments = ["cpp"],
 )
 
+###########################################################################################
+# cc_module_binary
+###########################################################################################
+def  _cc_module_binary_impl(ctx):
+  objs = []
+  for src in ctx.files.srcs:
+    output_info = cc_module_compile_action(ctx, src=src)
+    objs.append(output_info[1].object)
+  return cc_module_link_action(ctx, objs, ctx.label.name)
+
+_cc_module_binary_attrs  = {
+  "srcs": attr.label_list(mandatory=True, allow_files=True),
+}
+
+cc_module_binary = rule(
+    implementation = _cc_module_binary_impl,
+    attrs = dict(_common_attrs.items() + _cc_module_binary_attrs.items()),
+    toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
+    incompatible_use_toolchain_transition = True,
+    fragments = ["cpp"],
+)

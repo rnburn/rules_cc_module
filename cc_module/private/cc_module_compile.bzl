@@ -14,8 +14,8 @@
 
 load("@rules_cc//cc:action_names.bzl", "CPP_COMPILE_ACTION_NAME")
 load("@rules_cc//cc:toolchain_utils.bzl", "find_cpp_toolchain")
+load("//cc_module/private:provider.bzl", "ModuleCompileInfo")
 
-MyCCompileInfo = provider(doc = "", fields = ["object"])
 
 def replace_extension(f, new_ext):
   ext = f.extension
@@ -23,8 +23,8 @@ def replace_extension(f, new_ext):
 
 def cc_module_compile_action(ctx, src, module_output=None):
     cc_toolchain = find_cpp_toolchain(ctx)
-    obj = ctx.actions.declare_file(replace_extension(src, "o"))
 
+    obj = ctx.actions.declare_file(replace_extension(src, "o"))
 
     feature_configuration = cc_common.configure_features(
         ctx = ctx,
@@ -55,14 +55,17 @@ def cc_module_compile_action(ctx, src, module_output=None):
     )
 
     module_outputs = []
+    module = None
+    copy_args = []
     if module_output:
       output_cmi = ctx.actions.declare_file(module_output + ".gcm")
-      copy_args = [
+      copy_args += [
           "--copy-output",
           "gcm.cache/%s.gcm" % module_output,
           output_cmi.path,
       ]
       module_outputs.append(output_cmi)
+      module = (module_output, output_cmi)
 
     ctx.actions.run(
         executable = ctx.executable._process_wrapper,
@@ -76,5 +79,5 @@ def cc_module_compile_action(ctx, src, module_output=None):
     )
     return [
         DefaultInfo(files = depset([obj])),
-        MyCCompileInfo(object = obj),
+        ModuleCompileInfo(object = obj, module = module),
     ]
