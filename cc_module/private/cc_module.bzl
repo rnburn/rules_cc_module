@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("//cc_module/private:cc_module_archive.bzl", "cc_module_archive_action")
 load("//cc_module/private:cc_module_compile.bzl", "cc_module_compile_action")
 load("//cc_module/private:cc_module_link.bzl", "cc_module_link_action")
 load("//cc_module/private:provider.bzl", "ModuleCompileInfo")
