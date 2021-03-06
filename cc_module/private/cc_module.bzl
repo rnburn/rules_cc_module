@@ -27,13 +27,41 @@ _common_attrs = {
   "deps": attr.label_list(),
 }
 
+def gather_modules(deps):
+  modules = []
+  for dep in deps:
+    if ModuleCompileInfo in dep:
+      ci = dep[ModuleCompileInfo]
+      if ci.module_file:
+        modules.append((ci.module_name, ci.module_file))
+  return modules
+
+def setup_module_dependencies(owner, actions, modules):
+  module_map = ""
+  module_files = []
+  for module_name, module_file in modules:
+    module_files.append(module_file)
+    module_map += "%s %s\n" % (module_name, module_file.path)
+  map_file = actions.declare_file(owner + "-module-map")
+  actions.write(map_file, module_map)
+  return map_file
+
 ###########################################################################################
 # cc_module
 ###########################################################################################
 def _cc_module_impl(ctx):
+  deps = ctx.attr.deps
+  modules = gather_modules(deps)
+  module_name = ctx.label.name
+  module_out_file = ctx.actions.declare_file(module_name + ".gcm")
+  module_out = (module_name, module_out_file)
+  module_map = setup_module_dependencies(ctx.label.name, ctx.actions, modules + [module_out])
+  module_deps = depset([module_map] + [m[1] for m in modules])
   return cc_module_compile_action(ctx, src=ctx.file.src, 
-                                  deps=ctx.attr.deps, 
-                                  module_output=ctx.label.name)
+                                  deps=deps,
+                                  module_map=module_map, 
+                                  module_deps=module_deps,
+                                  module_out=module_out)
 
 _cc_module_attrs = {
   "src": attr.label(mandatory = True, allow_single_file = True),
@@ -51,9 +79,14 @@ cc_module = rule(
 # cc_module_binary
 ###########################################################################################
 def  _cc_module_binary_impl(ctx):
+  deps = ctx.attr.deps
+  modules = gather_modules(deps)
+  module_map = setup_module_dependencies(ctx.label.name, ctx.actions, modules)
+  module_deps = depset([module_map] + [m[1] for m in modules])
   objs = []
   for src in ctx.files.srcs:
-    output_info = cc_module_compile_action(ctx, src=src, deps=ctx.attr.deps)
+    output_info = cc_module_compile_action(ctx, src=src, deps=deps,
+                                           module_map=module_map, module_deps=module_deps)
     objs.append(output_info[1].object)
   return cc_module_link_action(ctx, objs, ctx.label.name)
 

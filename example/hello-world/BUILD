@@ -1,6 +1,3 @@
-load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
-load("//cc_module:defs.bzl", "cc_module", "cc_module_binary")
-
 # Copyright 2019 The Bazel Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +13,12 @@ load("//cc_module:defs.bzl", "cc_module", "cc_module_binary")
 # limitations under the License.
 
 # Example showing how to create a custom Starlark rule that just compiles C sources
+
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("//cc_module:defs.bzl", "cc_module", "cc_module_binary")
+
+package(default_visibility = ["//visibility:public"])
+
 licenses(["notice"])
 
 cc_module(
@@ -32,10 +35,3 @@ cc_module_binary(
         ":Hello",
     ],
 )
-
-# cc_binary(
-#     name = "h",
-#     srcs = [
-#         "main.cc",
-#     ],
-# )

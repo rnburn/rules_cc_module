@@ -26,7 +26,6 @@ def get_dep_info(deps):
   includes = []
   quote_includes = []
   system_includes = []
-  modules = []
   for dep in deps:
     if CcInfo in dep:
       cc = dep[CcInfo].compilation_context
@@ -34,18 +33,14 @@ def get_dep_info(deps):
       includes += cc.includes
       quote_includes += cc.quote_includes
       system_includes += cc.system_includes
-    elif ModuleCompileInfo in dep:
-      ci = dep[ModuleCompileInfo]
-      modules.append(ci.module)
   return {
       'headers' : depset(headers),
       'includes' : depset(includes),
       'quote_includes' : depset(quote_includes),
       'system_includes': depset(system_includes),
-      'modules': modules,
   }
 
-def cc_module_compile_action(ctx, src, deps, module_output=None):
+def cc_module_compile_action(ctx, src, deps, module_map, module_deps, module_out=None):
     cc_toolchain = find_cpp_toolchain(ctx)
 
     dep_info = get_dep_info(deps)
@@ -77,6 +72,7 @@ def cc_module_compile_action(ctx, src, deps, module_output=None):
         action_name = CPP_COMPILE_ACTION_NAME,
         variables = c_compile_variables,
     )
+    command_line = command_line + ["-fmodule-mapper=%s" % module_map.path]
     env = cc_common.get_environment_variables(
         feature_configuration = feature_configuration,
         action_name = CPP_COMPILE_ACTION_NAME,
@@ -84,29 +80,31 @@ def cc_module_compile_action(ctx, src, deps, module_output=None):
     )
 
     module_outputs = []
-    module = None
+    module_name = None
+    module_file = None
     copy_args = []
-    if module_output:
-      output_cmi = ctx.actions.declare_file(module_output + ".gcm")
-      copy_args += [
-          "--copy-output",
-          "gcm.cache/%s.gcm" % module_output,
-          output_cmi.path,
-      ]
-      module_outputs.append(output_cmi)
-      module = (module_output, output_cmi)
+    if module_out:
+      # output_cmi = ctx.actions.declare_file(module_output + ".gcm")
+      # copy_args += [
+      #     "--copy-output",
+      #     "gcm.cache/%s.gcm" % module_output,
+      #     output_cmi.path,
+      # ]
+      module_name, module_file = module_out
+      module_outputs.append(module_file)
 
+    outputs = module_outputs + [obj]
     ctx.actions.run(
         executable = ctx.executable._process_wrapper,
         arguments = copy_args + ["--", c_compiler_path] + command_line,
         env = env,
         inputs = depset(
-            [src] + dep_info['headers'].to_list(),
+            [src] + dep_info['headers'].to_list() + [module_map] + module_deps.to_list(),
             transitive = [cc_toolchain.all_files],
         ),
-        outputs = [obj] + module_outputs,
+        outputs = outputs,
     )
     return [
-        DefaultInfo(files = depset([obj])),
-        ModuleCompileInfo(object = obj, module = module),
+        DefaultInfo(files = depset(outputs)),
+        ModuleCompileInfo(object = obj, module_name = module_name, module_file = module_file),
     ]
