@@ -1,4 +1,4 @@
-// file: ex1/hello.cc
+// file: hello.cc
 module;
 // legacy includes go here – not part of this module
 #include <iostream>

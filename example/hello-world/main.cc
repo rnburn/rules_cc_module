@@ -1,6 +1,9 @@
-#include <iostream>
+// main.cc
+import Hello;
+
+#include <string_view>
 
 int main() {
-  std::cout << "arf\n";
+  SayHello("world");
   return 0;
 }

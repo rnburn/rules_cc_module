@@ -27,7 +27,7 @@ cc_module(
 )
 
 cc_module_binary(
-    name = "h",
+    name = "a.out",
     srcs = [
         "main.cc",
     ],
