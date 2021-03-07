@@ -69,10 +69,9 @@ cc_binary(
 ```
 
 ## Examples
-The directory [example](https://github.com/rnburn/bazel-cpp20-modules/tree/main/example) contains
-many examples and there is also a docker image with a versin of gcc that can build the examples. You
-can run with
-
+The directory [example](https://github.com/rnburn/bazel-cpp20-modules/tree/main/example) demonstrates 
+usage and there is a docker image that provides a build environment. To build the examples,
+run
 ```
 ./ci/run_docker.sh # spins up a build environment
 bazel build //example/... # build the examples
