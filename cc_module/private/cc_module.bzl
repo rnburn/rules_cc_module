@@ -41,15 +41,19 @@ def _cc_module_impl(ctx):
   module_name = ctx.label.name
   archive_out_file = ctx.actions.declare_file(module_name + ".a")
   module_out_file = ctx.actions.declare_file(module_name + ".gcm")
-  module_info = ModuleCompileInfo(
-      module_name = module_name,
-      module_file = module_out_file,
-  )
   deps = ctx.attr.deps
   cc_info_deps = get_cc_info_deps(deps)
   module_deps = get_module_deps(deps)
+  module_info = ModuleCompileInfo(
+      module_name = module_name,
+      module_file = module_out_file,
+      module_dependencies = module_deps,
+  )
 
-  module_map = make_module_mapper(ctx.label.name, ctx.actions, module_deps + [module_info])
+  module_map = make_module_mapper(
+      ctx.label.name, 
+      ctx.actions, 
+      depset(direct = [module_info], transitive = [module_deps]))
 
   compilation_context = get_module_compilation_context(cc_info_deps, module_map, module_deps) 
 

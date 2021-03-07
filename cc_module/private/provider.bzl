@@ -1,4 +1,8 @@
-ModuleCompileInfo = provider(doc = "", fields = ["object", "module_name", "module_file"])
+ModuleCompileInfo = provider(doc = "", fields = [
+    "module_name", 
+    "module_file",
+    "module_dependencies",
+])
 
 ModuleCompilationContext = provider(
     doc = "",
