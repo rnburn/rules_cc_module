@@ -89,6 +89,63 @@ cc_module = rule(
 )
 
 ###########################################################################################
+# cc_module_library
+###########################################################################################
+def _cc_module_library_impl(ctx):
+  archive_out_file = ctx.actions.declare_file(ctx.label.name + ".a")
+
+  deps = ctx.attr.deps
+  cc_info_deps = get_cc_info_deps(deps)
+  module_deps = get_module_deps(deps)
+
+  module_map = make_module_mapper(ctx.label.name, ctx.actions, module_deps)
+
+  compilation_context = cc_common.create_compilation_context(
+      headers = depset(ctx.files.hdrs),
+  )
+  compilation_context = get_module_compilation_context(
+      cc_common.merge_cc_infos(cc_infos=[
+        CcInfo(
+            compilation_context = compilation_context,
+        ),
+        cc_info_deps, 
+      ]),
+      module_map, module_deps) 
+
+  objs = []
+  for src in ctx.files.srcs:
+    obj = cc_module_compile_action(ctx, src=src, 
+                                           compilation_context = compilation_context)
+    objs.append(obj)
+
+  linking_context = cc_module_archive_action(ctx, objs, archive_out_file)
+  outputs = [
+      archive_out_file,
+  ]
+  cc_info = CcInfo(
+      compilation_context = compilation_context.compilation_context,
+      linking_context = linking_context
+  )
+  cc_info = cc_common.merge_cc_infos(cc_infos=[cc_info, cc_info_deps])
+  return [
+        DefaultInfo(files = depset(outputs)),
+        cc_info,
+  ]
+
+_cc_module_library_attrs  = {
+  "hdrs": attr.label_list(mandatory=False, allow_files=True),
+  "srcs": attr.label_list(mandatory=False, allow_files=True),
+}
+
+cc_module_library = rule(
+    implementation = _cc_module_library_impl,
+    attrs = dict(_common_attrs.items() + _cc_module_library_attrs.items()),
+    toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
+    incompatible_use_toolchain_transition = True,
+    fragments = ["cpp"],
+)
+
+###########################################################################################
 # cc_module_binary
 ###########################################################################################
 def  _cc_module_binary_impl(ctx):

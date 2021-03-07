@@ -53,6 +53,8 @@ def cc_module_compile_action(ctx, src, compilation_context, module_out=None):
         variables = c_compile_variables,
     )
     command_line = command_line + ["-fmodule-mapper=%s" % compilation_context.module_mapper.path]
+    command_line += ["-iquote", "."]
+
     env = cc_common.get_environment_variables(
         feature_configuration = feature_configuration,
         action_name = CPP_COMPILE_ACTION_NAME,
