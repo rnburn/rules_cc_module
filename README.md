@@ -49,7 +49,7 @@ cc_module_library(
         "b.h",
     ],
     srcs = [
-        "b.cc",
+        "b.cc", # b can import module a, but shouldn't export a module
     ],
     deps = [
         ":a",
