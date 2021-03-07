@@ -19,6 +19,8 @@ def get_module_compilation_context(cc_info_deps, mapper, module_deps):
   return ModuleCompilationContext(
     compilation_context = cc_info_deps.compilation_context,
     module_mapper = mapper,
-    module_inputs = depset([m.module_file for m in module_deps]),
+    module_inputs = depset(
+        direct=[m.module_file for m in module_deps] + [mapper],
+        transitive=[cc_info_deps.compilation_context.headers]),
   )
 

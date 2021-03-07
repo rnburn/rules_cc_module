@@ -34,15 +34,6 @@ _common_attrs = {
   "deps": attr.label_list(),
 }
 
-def gather_modules(deps):
-  modules = []
-  for dep in deps:
-    if ModuleCompileInfo in dep:
-      ci = dep[ModuleCompileInfo]
-      if ci.module_file:
-        modules.append((ci.module_name, ci.module_file))
-  return modules
-
 ###########################################################################################
 # cc_module
 ###########################################################################################
@@ -63,11 +54,17 @@ def _cc_module_impl(ctx):
 
   module_out = (module_name, module_out_file)
 
-  return cc_module_compile_action(ctx, src=ctx.file.src, 
-                                  deps=deps,
-                                  module_map=module_map, 
-                                  module_deps=compilation_context.module_inputs,
+  obj = cc_module_compile_action(ctx, src=ctx.file.src, 
+                                  compilation_context=compilation_context,
                                   module_out=module_out)
+  outputs = [
+      obj,
+      module_info.module_file,
+  ]
+  return [
+        DefaultInfo(files = depset(outputs)),
+        module_info,
+  ]
 
 _cc_module_attrs = {
   "src": attr.label(mandatory = True, allow_single_file = True),
@@ -96,10 +93,9 @@ def  _cc_module_binary_impl(ctx):
 
   objs = []
   for src in ctx.files.srcs:
-    output_info = cc_module_compile_action(ctx, src=src, deps=deps,
-                                           module_map=module_map, 
-                                           module_deps=compilation_context.module_inputs)
-    objs.append(output_info[1].object)
+    obj = cc_module_compile_action(ctx, src=src, 
+                                           compilation_context = compilation_context)
+    objs.append(obj)
   return cc_module_link_action(ctx, objs, ctx.label.name)
 
 _cc_module_binary_attrs  = {
