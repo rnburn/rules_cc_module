@@ -88,6 +88,7 @@ cc_module = rule(
 # cc_module_binary
 ###########################################################################################
 def  _cc_module_binary_impl(ctx):
+  exe = ctx.actions.declare_file(ctx.label.name)
   deps = ctx.attr.deps
   cc_info_deps = get_cc_info_deps(deps)
   module_deps = get_module_deps(deps)
@@ -102,7 +103,11 @@ def  _cc_module_binary_impl(ctx):
     obj = cc_module_compile_action(ctx, src=src, 
                                            compilation_context = compilation_context)
     objs.append(obj)
-  return cc_module_link_action(ctx, objs, ctx.label.name)
+  cc_module_link_action(ctx, objs, cc_info_deps.linking_context, exe)
+
+  return [
+      DefaultInfo(files = depset([exe]), executable=exe),
+  ]
 
 _cc_module_binary_attrs  = {
   "srcs": attr.label_list(mandatory=True, allow_files=True),

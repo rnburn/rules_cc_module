@@ -2,7 +2,7 @@ load("//cc_module/private:provider.bzl", "ModuleCompilationContext", "ModuleComp
 
 def get_cc_info_deps(deps):
   return cc_common.merge_cc_infos(
-      cc_infos = [dep[CcInfo] for dep in deps if CcInfo in dep])
+      cc_infos = [dep[CcInfo] for dep in deps])
 
 def get_module_deps(deps):
   return [dep[ModuleCompileInfo] for dep in deps if ModuleCompileInfo in dep]

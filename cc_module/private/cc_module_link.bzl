@@ -42,9 +42,8 @@ def get_linker_and_args(ctx, cc_toolchain, feature_configuration, rpaths, output
 
     return ld, link_args, link_env
 
-def cc_module_link_action(ctx, objs, output):
+def cc_module_link_action(ctx, objs, linking_context, exe):
     cc_toolchain = find_cpp_toolchain(ctx)
-    exe = ctx.actions.declare_file(output)
 
     feature_configuration = cc_common.configure_features(
         ctx = ctx,
@@ -53,25 +52,36 @@ def cc_module_link_action(ctx, objs, output):
         unsupported_features = ctx.disabled_features,
     )
 
+    compilation_outputs = cc_common.create_compilation_outputs(
+        objects = depset(objs),
+    )
+
     ld, link_args, link_env = get_linker_and_args(ctx, cc_toolchain, feature_configuration, 
                                                   depset(), exe.path)
 
     args = ctx.actions.args()
     args.add_all(link_args)
     args.add_all(objs)
+    
+    inputs = []
+    for linker_inputs in linking_context.linker_inputs.to_list():
+      for lib in linker_inputs.libraries:
+        if lib.static_library:
+          args.add(lib.static_library)
+          inputs.append(lib.static_library)
+        if lib.objects:
+          args.add(lib.objects)
+          inputs += lib.objects
+      args.add_all(linker_inputs.user_link_flags)
 
     ctx.actions.run(
-        # executable = ld,
-        executable = ctx.executable._process_wrapper,
-        arguments = ["--", ld] + [args],
+        executable = ld,
+        arguments = [args],
         env = link_env,
         use_default_shell_env = True,
         inputs = depset(
-            direct = objs,
+            direct = objs + inputs,
             transitive = [cc_toolchain.all_files],
         ),
         outputs = [exe],
     )
-    return [
-        DefaultInfo(files = depset([exe]), executable=exe),
-    ]
