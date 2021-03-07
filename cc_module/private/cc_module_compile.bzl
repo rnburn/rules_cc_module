@@ -21,7 +21,7 @@ def replace_extension(f, new_ext):
   ext = f.extension
   return f.basename[:-len(ext)]  + new_ext
 
-def cc_module_compile_action(ctx, src, compilation_context, module_out=None):
+def cc_module_compile_action(ctx, src, compilation_context, module_out=None, module_dest=None):
     cc_toolchain = find_cpp_toolchain(ctx)
 
     obj = ctx.actions.declare_file(replace_extension(src, "o"))
@@ -61,13 +61,21 @@ def cc_module_compile_action(ctx, src, compilation_context, module_out=None):
         variables = c_compile_variables,
     )
 
+    copy_files = []
     outputs = [obj]
     if module_out:
-      outputs.append(module_out.module_file)
+      if module_out.module_file.path != module_dest.path:
+        copy_files = [
+            "--copy-output",
+            module_out.module_file.path,
+            module_dest.path,
+        ]
+      outputs.append(module_dest)
+
 
     ctx.actions.run(
         executable = ctx.executable._process_wrapper,
-        arguments = ["--", c_compiler_path] + command_line,
+        arguments = copy_files + ["--", c_compiler_path] + command_line,
         env = env,
         inputs = depset(
             [src],
