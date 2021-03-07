@@ -52,11 +52,9 @@ def _cc_module_impl(ctx):
 
   compilation_context = get_module_compilation_context(cc_info_deps, module_map, module_deps) 
 
-  module_out = (module_name, module_out_file)
-
   obj = cc_module_compile_action(ctx, src=ctx.file.src, 
                                   compilation_context=compilation_context,
-                                  module_out=module_out)
+                                  module_out=module_info)
   outputs = [
       obj,
       module_info.module_file,

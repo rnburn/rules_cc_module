@@ -59,18 +59,13 @@ def cc_module_compile_action(ctx, src, compilation_context, module_out=None):
         variables = c_compile_variables,
     )
 
-    module_outputs = []
-    module_name = None
-    module_file = None
-    copy_args = []
+    outputs = [obj]
     if module_out:
-      module_name, module_file = module_out
-      module_outputs.append(module_file)
+      outputs.append(module_out.module_file)
 
-    outputs = module_outputs + [obj]
     ctx.actions.run(
         executable = ctx.executable._process_wrapper,
-        arguments = copy_args + ["--", c_compiler_path] + command_line,
+        arguments = ["--", c_compiler_path] + command_line,
         env = env,
         inputs = depset(
             [src],
