@@ -84,12 +84,6 @@ def cc_module_compile_action(ctx, src, deps, module_map, module_deps, module_out
     module_file = None
     copy_args = []
     if module_out:
-      # output_cmi = ctx.actions.declare_file(module_output + ".gcm")
-      # copy_args += [
-      #     "--copy-output",
-      #     "gcm.cache/%s.gcm" % module_output,
-      #     output_cmi.path,
-      # ]
       module_name, module_file = module_out
       module_outputs.append(module_file)
 

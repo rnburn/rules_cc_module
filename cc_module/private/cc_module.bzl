@@ -15,6 +15,12 @@
 load("//cc_module/private:cc_module_archive.bzl", "cc_module_archive_action")
 load("//cc_module/private:cc_module_compile.bzl", "cc_module_compile_action")
 load("//cc_module/private:cc_module_link.bzl", "cc_module_link_action")
+load("//cc_module/private:utility.bzl", 
+      "get_cc_info_deps",
+      "get_module_deps",
+      "make_module_mapper",
+      "get_module_compilation_context",
+     )
 load("//cc_module/private:provider.bzl", "ModuleCompileInfo")
 
 _common_attrs = {
@@ -37,31 +43,30 @@ def gather_modules(deps):
         modules.append((ci.module_name, ci.module_file))
   return modules
 
-def setup_module_dependencies(owner, actions, modules):
-  module_map = ""
-  module_files = []
-  for module_name, module_file in modules:
-    module_files.append(module_file)
-    module_map += "%s %s\n" % (module_name, module_file.path)
-  map_file = actions.declare_file(owner + "-module-map")
-  actions.write(map_file, module_map)
-  return map_file
-
 ###########################################################################################
 # cc_module
 ###########################################################################################
 def _cc_module_impl(ctx):
-  deps = ctx.attr.deps
-  modules = gather_modules(deps)
   module_name = ctx.label.name
   module_out_file = ctx.actions.declare_file(module_name + ".gcm")
+  module_info = ModuleCompileInfo(
+      module_name = module_name,
+      module_file = module_out_file,
+  )
+  deps = ctx.attr.deps
+  cc_info_deps = get_cc_info_deps(deps)
+  module_deps = get_module_deps(deps)
+
+  module_map = make_module_mapper(ctx.label.name, ctx.actions, module_deps + [module_info])
+
+  compilation_context = get_module_compilation_context(cc_info_deps, module_map, module_deps) 
+
   module_out = (module_name, module_out_file)
-  module_map = setup_module_dependencies(ctx.label.name, ctx.actions, modules + [module_out])
-  module_deps = depset([module_map] + [m[1] for m in modules])
+
   return cc_module_compile_action(ctx, src=ctx.file.src, 
                                   deps=deps,
                                   module_map=module_map, 
-                                  module_deps=module_deps,
+                                  module_deps=compilation_context.module_inputs,
                                   module_out=module_out)
 
 _cc_module_attrs = {
@@ -81,13 +86,19 @@ cc_module = rule(
 ###########################################################################################
 def  _cc_module_binary_impl(ctx):
   deps = ctx.attr.deps
-  modules = gather_modules(deps)
-  module_map = setup_module_dependencies(ctx.label.name, ctx.actions, modules)
-  module_deps = depset([module_map] + [m[1] for m in modules])
+  cc_info_deps = get_cc_info_deps(deps)
+  module_deps = get_module_deps(deps)
+
+  module_map = make_module_mapper(ctx.label.name, ctx.actions, module_deps)
+
+  compilation_context = get_module_compilation_context(cc_info_deps, module_map, module_deps) 
+
+
   objs = []
   for src in ctx.files.srcs:
     output_info = cc_module_compile_action(ctx, src=src, deps=deps,
-                                           module_map=module_map, module_deps=module_deps)
+                                           module_map=module_map, 
+                                           module_deps=compilation_context.module_inputs)
     objs.append(output_info[1].object)
   return cc_module_link_action(ctx, objs, ctx.label.name)
 
