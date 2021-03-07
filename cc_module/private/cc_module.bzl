@@ -39,6 +39,7 @@ _common_attrs = {
 ###########################################################################################
 def _cc_module_impl(ctx):
   module_name = ctx.label.name
+  archive_out_file = ctx.actions.declare_file(module_name + ".a")
   module_out_file = ctx.actions.declare_file(module_name + ".gcm")
   module_info = ModuleCompileInfo(
       module_name = module_name,
@@ -55,12 +56,19 @@ def _cc_module_impl(ctx):
   obj = cc_module_compile_action(ctx, src=ctx.file.src, 
                                   compilation_context=compilation_context,
                                   module_out=module_info)
+  linking_context = cc_module_archive_action(ctx, [obj], archive_out_file)
   outputs = [
-      obj,
-      module_info.module_file,
+      archive_out_file,
+      module_out_file,
   ]
+  cc_info = CcInfo(
+      compilation_context = compilation_context.compilation_context,
+      linking_context = linking_context
+  )
+  cc_info = cc_common.merge_cc_infos(cc_infos=[cc_info, cc_info_deps])
   return [
         DefaultInfo(files = depset(outputs)),
+        cc_info,
         module_info,
   ]
 

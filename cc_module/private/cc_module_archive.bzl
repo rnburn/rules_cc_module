@@ -15,7 +15,7 @@
 load("@rules_cc//cc:action_names.bzl", "CPP_LINK_STATIC_LIBRARY_ACTION_NAME")
 load("@rules_cc//cc:toolchain_utils.bzl", "find_cpp_toolchain")
 
-def make_cc_info(ctx, cc_toolchain, feature_configuration, deps, output_file):
+def make_linking_context(ctx, cc_toolchain, feature_configuration, output_file):
   linker_input = cc_common.create_linker_input(
       owner = ctx.label,
       libraries = depset(direct = [
@@ -28,17 +28,10 @@ def make_cc_info(ctx, cc_toolchain, feature_configuration, deps, output_file):
       ]),
   )
   compilation_context = cc_common.create_compilation_context()
-  linking_context = cc_common.create_linking_context(
+  return cc_common.create_linking_context(
           linker_inputs = depset(direct = [linker_input]))
 
-  cc_info = CcInfo(
-      compilation_context = compilation_context,
-      linking_context = linking_context)
-
-  return cc_common.merge_cc_infos(
-      cc_infos = [cc_info] + [dep[CcInfo] for dep in deps])
-
-def cc_module_archive_action(ctx, objs, deps, output_file):
+def cc_module_archive_action(ctx, objs, output_file):
     cc_toolchain = find_cpp_toolchain(ctx)
     
     feature_configuration = cc_common.configure_features(
@@ -90,4 +83,4 @@ def cc_module_archive_action(ctx, objs, deps, output_file):
         outputs = [output_file],
     )
 
-    return make_cc_info(ctx, cc_toolchain, feature_configuration, deps, output_file)
+    return make_linking_context(ctx, cc_toolchain, feature_configuration, output_file)
