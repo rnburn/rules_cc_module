@@ -13,11 +13,15 @@
 # limitations under the License.
 
 load("//cc_module/private:cc_module_archive.bzl", "cc_module_archive_action")
-load("//cc_module/private:cc_module_compile.bzl", "cc_module_compile_action")
+load("//cc_module/private:cc_module_compile.bzl", 
+     "cc_module_compile_action",
+     "cc_header_module_compile_action",
+)
 load("//cc_module/private:cc_module_link.bzl", "cc_module_link_action")
 load("//cc_module/private:utility.bzl", 
       "get_cc_info_deps",
       "get_module_deps",
+      "get_include_path",
       "make_module_mapper",
       "make_module_compilation_context",
      )
@@ -62,7 +66,6 @@ def _cc_module_impl(ctx):
 
   compilation_context = ModuleCompilationContext(
       compilation_context = compilation_context.compilation_context,
-      produce_object = True,
       module_mapper = compilation_context.module_mapper,
       module_inputs = depset(
           direct = [module_out_file],
@@ -99,6 +102,65 @@ _cc_module_attrs = {
 cc_module = rule(
     implementation = _cc_module_impl,
     attrs = dict(_common_attrs.items() + _cc_module_attrs.items()),
+    toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
+    incompatible_use_toolchain_transition = True,
+    fragments = ["cpp"],
+)
+
+###########################################################################################
+# cc_header_module
+###########################################################################################
+def _cc_header_module_impl(ctx):
+  hdr = ctx.file.hdr
+  
+  include_path = "./" + get_include_path(hdr.path, ctx.attr.strip_include_prefix, 
+                                         ctx.attr.include_prefix)
+  
+  module_name = "./" + hdr.path
+  module_out_file = ctx.actions.declare_file(hdr.basename + ".gcm")
+
+  deps = ctx.attr.deps
+  cc_info_deps = get_cc_info_deps(deps)
+  module_deps = get_module_deps(deps)
+  module_info = ModuleCompileInfo(
+      module_name = module_name,
+      module_file = module_out_file,
+      module_dependencies = module_deps,
+  )
+
+  module_map = make_module_mapper(
+      ctx.label.name,
+      ctx.actions, 
+      depset(direct = [module_info], transitive = [module_deps]))
+  compilation_context = make_module_compilation_context(cc_info_deps, module_map, module_deps)
+  cc_header_module_compile_action(ctx, src=hdr,
+                           compilation_context=compilation_context,
+                           module_out=module_info)
+
+  hdr_compilation_context = cc_common.create_compilation_context(
+      headers = depset([hdr]),
+  )
+  cc_info = CcInfo(
+      compilation_context = hdr_compilation_context,
+  )
+  cc_info = cc_common.merge_cc_infos(cc_infos=[cc_info, cc_info_deps])
+  outputs = [module_out_file]
+  return [
+        DefaultInfo(files = depset(outputs)),
+        cc_info,
+        module_info,
+  ]
+
+
+_cc_header_module_attrs = {
+  "hdr": attr.label(mandatory = True, allow_single_file = True),
+  "strip_include_prefix": attr.string(mandatory=False),
+  "include_prefix": attr.string(mandatory=False),
+}
+
+cc_header_module = rule(
+    implementation = _cc_header_module_impl,
+    attrs = dict(_common_attrs.items() + _cc_header_module_attrs.items()),
     toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
     incompatible_use_toolchain_transition = True,
     fragments = ["cpp"],

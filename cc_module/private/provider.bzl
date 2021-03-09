@@ -8,7 +8,6 @@ ModuleCompilationContext = provider(
     doc = "",
     fields = [
         "compilation_context",
-        "produce_object",
         "module_mapper",
         "module_inputs",
     ],
