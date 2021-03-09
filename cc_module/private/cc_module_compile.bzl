@@ -83,4 +83,4 @@ def cc_module_compile_action(ctx, src, compilation_context, module_out=None, mod
         ),
         outputs = outputs,
     )
-    return obj
+    return [obj]

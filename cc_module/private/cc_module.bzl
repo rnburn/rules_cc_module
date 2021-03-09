@@ -19,7 +19,7 @@ load("//cc_module/private:utility.bzl",
       "get_cc_info_deps",
       "get_module_deps",
       "make_module_mapper",
-      "get_module_compilation_context",
+      "make_module_compilation_context",
      )
 load("//cc_module/private:provider.bzl", "ModuleCompileInfo")
 
@@ -49,7 +49,7 @@ def compile_module(ctx, cc_info_deps, module_info, i, src, cmi, cmi_dest):
       depset(direct = [module_info_p], transitive = [module_deps]))
   if i > 0:
     module_deps = depset(direct  = [module_info_p], transitive = [module_deps])
-  compilation_context = get_module_compilation_context(cc_info_deps, module_map, module_deps) 
+  compilation_context = make_module_compilation_context(cc_info_deps, module_map, module_deps) 
   return cc_module_compile_action(ctx, src=src, 
                                   compilation_context=compilation_context,
                                   module_out=module_info_p,
@@ -69,8 +69,7 @@ def compile_multi_source_module(ctx, cc_info_deps, module_info, export_src, impl
       cmi = ctx.actions.declare_file(module_info.module_name + "." + str(i))
     if not prev_cmi:
       prev_cmi = cmi
-    obj = compile_module(ctx, cc_info_deps, module_info, i, src, prev_cmi, cmi)
-    objs.append(obj)
+    objs += compile_module(ctx, cc_info_deps, module_info, i, src, prev_cmi, cmi)
   return objs
 
 def _cc_module_impl(ctx):
@@ -132,7 +131,7 @@ def _cc_module_library_impl(ctx):
   compilation_context = cc_common.create_compilation_context(
       headers = depset(ctx.files.hdrs),
   )
-  compilation_context = get_module_compilation_context(
+  compilation_context = make_module_compilation_context(
       cc_common.merge_cc_infos(cc_infos=[
         CcInfo(
             compilation_context = compilation_context,
@@ -143,9 +142,8 @@ def _cc_module_library_impl(ctx):
 
   objs = []
   for src in ctx.files.srcs:
-    obj = cc_module_compile_action(ctx, src=src, 
+    objs += cc_module_compile_action(ctx, src=src, 
                                            compilation_context = compilation_context)
-    objs.append(obj)
 
   linking_context = cc_module_archive_action(ctx, objs, archive_out_file)
   outputs = [
@@ -185,14 +183,13 @@ def  _cc_module_binary_impl(ctx):
 
   module_map = make_module_mapper(ctx.label.name, ctx.actions, module_deps)
 
-  compilation_context = get_module_compilation_context(cc_info_deps, module_map, module_deps) 
+  compilation_context = make_module_compilation_context(cc_info_deps, module_map, module_deps) 
 
 
   objs = []
   for src in ctx.files.srcs:
-    obj = cc_module_compile_action(ctx, src=src, 
+    objs += cc_module_compile_action(ctx, src=src, 
                                            compilation_context = compilation_context)
-    objs.append(obj)
   cc_module_link_action(ctx, objs, cc_info_deps.linking_context, exe)
 
   return [

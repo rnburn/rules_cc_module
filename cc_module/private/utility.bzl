@@ -23,11 +23,12 @@ def make_module_mapper(owner, actions, modules):
   actions.write(map_file, module_map)
   return map_file
 
-def get_module_compilation_context(cc_info_deps, mapper, module_deps):
+def make_module_compilation_context(cc_info_deps, mapper, module_deps, produce_object=True):
   module_files = [m.module_file for m in module_deps.to_list()]
   return ModuleCompilationContext(
     compilation_context = cc_info_deps.compilation_context,
     module_mapper = mapper,
+    produce_object = produce_object,
     module_inputs = depset(
         direct = [mapper] + module_files,
         transitive = [cc_info_deps.compilation_context.headers],
