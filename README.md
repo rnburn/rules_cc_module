@@ -1,4 +1,4 @@
-# bazel-cpp20-modules
+# rules_cc_module
 
 Rules to use C++20 modules with Bazel.
 
