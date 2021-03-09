@@ -21,7 +21,7 @@ load("//cc_module/private:utility.bzl",
       "make_module_mapper",
       "make_module_compilation_context",
      )
-load("//cc_module/private:provider.bzl", "ModuleCompileInfo")
+load("//cc_module/private:provider.bzl", "ModuleCompileInfo", "ModuleCompilationContext")
 
 _common_attrs = {
   "_cc_toolchain": attr.label(default = Label("@bazel_tools//tools/cpp:current_cc_toolchain")),
@@ -37,41 +37,6 @@ _common_attrs = {
 ###########################################################################################
 # cc_module
 ###########################################################################################
-def compile_module(ctx, cc_info_deps, module_info, i, src, cmi, cmi_dest):
-  module_deps = module_info.module_dependencies
-  module_info_p = ModuleCompileInfo(
-      module_name = module_info.module_name,
-      module_file = cmi,
-      module_dependencies = module_deps)
-  module_map = make_module_mapper(
-      ctx.label.name + "." + str(i), 
-      ctx.actions, 
-      depset(direct = [module_info_p], transitive = [module_deps]))
-  if i > 0:
-    module_deps = depset(direct  = [module_info_p], transitive = [module_deps])
-  compilation_context = make_module_compilation_context(cc_info_deps, module_map, module_deps) 
-  return cc_module_compile_action(ctx, src=src, 
-                                  compilation_context=compilation_context,
-                                  module_out=module_info_p,
-                                  module_dest=cmi_dest)
-
-
-def compile_multi_source_module(ctx, cc_info_deps, module_info, export_src, impl_srcs):
-  all_srcs = [export_src] + impl_srcs
-  num_srcs = len(all_srcs)
-  objs = []
-  prev_cmi = None
-  for i, src in enumerate(all_srcs):
-    cmi = None
-    if i == len(all_srcs)-1:
-      cmi = module_info.module_file
-    else:
-      cmi = ctx.actions.declare_file(module_info.module_name + "." + str(i))
-    if not prev_cmi:
-      prev_cmi = cmi
-    objs += compile_module(ctx, cc_info_deps, module_info, i, src, prev_cmi, cmi)
-  return objs
-
 def _cc_module_impl(ctx):
   module_name = ctx.label.name
   archive_out_file = ctx.actions.declare_file(module_name + ".a")
@@ -85,7 +50,30 @@ def _cc_module_impl(ctx):
       module_dependencies = module_deps,
   )
 
-  objs = compile_multi_source_module(ctx, cc_info_deps, module_info, ctx.file.src, ctx.files.impl_srcs)
+  module_map = make_module_mapper(
+      ctx.label.name,
+      ctx.actions, 
+      depset(direct = [module_info], transitive = [module_deps]))
+  compilation_context = make_module_compilation_context(cc_info_deps, module_map, module_deps) 
+  objs = []
+  objs += cc_module_compile_action(ctx, src=ctx.file.src, 
+                                   compilation_context=compilation_context,
+                                   module_out=module_info)
+
+  compilation_context = ModuleCompilationContext(
+      compilation_context = compilation_context.compilation_context,
+      produce_object = True,
+      module_mapper = compilation_context.module_mapper,
+      module_inputs = depset(
+          direct = [module_out_file],
+          transitive = [compilation_context.module_inputs]
+      )
+  )
+
+  for impl_src in ctx.files.impl_srcs:
+    objs += cc_module_compile_action(ctx, src=impl_src,
+                                     compilation_context=compilation_context)
+
 
   linking_context = cc_module_archive_action(ctx, objs, archive_out_file)
   outputs = [
