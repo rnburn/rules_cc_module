@@ -14,6 +14,10 @@ cc_module(
     deps = [
         ":a_hdr",
     ],
+    copts = [
+        "-fmodules-ts",
+        "-std=c++20",
+    ],
 )
 
 cc_module_binary(
@@ -21,5 +25,9 @@ cc_module_binary(
     srcs = ["main.cc"],
     deps = [
         ":b",
+    ],
+    copts = [
+        "-fmodules-ts",
+        "-std=c++20",
     ],
 )

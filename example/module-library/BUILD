@@ -8,6 +8,10 @@ licenses(["notice"])
 cc_module(
     name = "a",
     src = "a.cc",
+    copts = [
+        "-fmodules-ts",
+        "-std=c++20",
+    ],
 )
 
 cc_module_library(
@@ -21,6 +25,10 @@ cc_module_library(
     deps = [
         ":a",
     ],
+    copts = [
+        "-fmodules-ts",
+        "-std=c++20",
+    ],
 )
 
 cc_binary(
@@ -30,5 +38,9 @@ cc_binary(
     ],
     deps = [
         ":b",
+    ],
+    copts = [
+        "-fmodules-ts",
+        "-std=c++20",
     ],
 )

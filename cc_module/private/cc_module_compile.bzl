@@ -37,10 +37,11 @@ def cc_module_compile_action(ctx, src, compilation_context, module_out=None):
         action_name = CPP_COMPILE_ACTION_NAME,
     )
     cc = compilation_context.compilation_context
+    copts = getattr(ctx.attr, "copts", [])
     c_compile_variables = cc_common.create_compile_variables(
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
-        user_compile_flags = ctx.fragments.cpp.copts + ctx.fragments.cpp.conlyopts + ["-fmodules-ts", "-std=c++20"],
+        user_compile_flags = ctx.fragments.cpp.copts + ctx.fragments.cpp.conlyopts + copts,
         include_directories = cc.includes,
         quote_include_directories = cc.quote_includes,
         system_include_directories = cc.system_includes,

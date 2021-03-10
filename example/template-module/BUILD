@@ -9,6 +9,10 @@ licenses(["notice"])
 cc_module(
     name = "algorithm",
     src = "algorithm.cc",
+    copts = [
+        "-fmodules-ts",
+        "-std=c++20",
+    ],
 )
 
 cc_module_binary(
@@ -18,5 +22,9 @@ cc_module_binary(
     ],
     deps = [
         ":algorithm",
+    ],
+    copts = [
+        "-fmodules-ts",
+        "-std=c++20",
     ],
 )

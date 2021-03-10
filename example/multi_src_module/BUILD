@@ -11,6 +11,10 @@ cc_module(
   impl_srcs = [
       "speech_impl.cc",
   ],
+    copts = [
+        "-fmodules-ts",
+        "-std=c++20",
+    ],
 )
 
 cc_module_binary(
@@ -20,5 +24,9 @@ cc_module_binary(
     ],
     deps = [
         ":speech",
+    ],
+    copts = [
+        "-fmodules-ts",
+        "-std=c++20",
     ],
 )

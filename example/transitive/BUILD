@@ -11,11 +11,19 @@ cc_module(
     deps = [
         ":b",
     ],
+    copts = [
+        "-fmodules-ts",
+        "-std=c++20",
+    ],
 )
 
 cc_module(
     name = "b",
     src = "b.cc",
+    copts = [
+        "-fmodules-ts",
+        "-std=c++20",
+    ],
 )
 
 cc_module_binary(
@@ -25,5 +33,9 @@ cc_module_binary(
     ],
     deps = [
         ":a",
+    ],
+    copts = [
+        "-fmodules-ts",
+        "-std=c++20",
     ],
 )
