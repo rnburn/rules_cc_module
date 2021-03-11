@@ -15,6 +15,15 @@ def get_module_deps(deps):
     transitive.append(module.module_dependencies)
   return depset(direct=direct, transitive=transitive)
 
+def get_includes(ctx):
+  includes = ctx.attr.includes
+  result = []
+  basepath = ctx.build_file_path.split("/")
+  basepath[:-1]
+  for inc in includes:
+    result.append("/".join(basepath + [inc]))
+  return result
+
 def make_module_mapper(owner, actions, modules):
   module_map = ""
   for module in modules.to_list():
@@ -22,6 +31,7 @@ def make_module_mapper(owner, actions, modules):
   map_file = actions.declare_file(owner + "-module-map")
   actions.write(map_file, module_map)
   return map_file
+
 
 def make_module_compilation_context(cc_info_deps, mapper, module_deps):
   module_files = [m.module_file for m in module_deps.to_list()]
@@ -34,11 +44,9 @@ def make_module_compilation_context(cc_info_deps, mapper, module_deps):
     )
   )
 
-def get_include_path(path, strip_prefix, prefix):
-  if strip_prefix:
-    if not path.startswith(strip_prefix):
-      fail("%s doesn't start with prefix %s" % (path, strip_prefix))
-    path = path[len(strip_prefix):]
-  if prefix:
-    return prefix + path
-  return path
+def get_header_module_name(hdr, include_path):
+  if not include_path:
+    return "./" + hdr.path
+  return include_path + "/" + hdr.basename
+
+

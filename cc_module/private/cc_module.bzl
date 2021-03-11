@@ -21,7 +21,7 @@ load("//cc_module/private:cc_module_link.bzl", "cc_module_link_action")
 load("//cc_module/private:utility.bzl", 
       "get_cc_info_deps",
       "get_module_deps",
-      "get_include_path",
+      "get_header_module_name",
       "make_module_mapper",
       "make_module_compilation_context",
      )
@@ -113,22 +113,46 @@ cc_module = rule(
 ###########################################################################################
 def _cc_header_module_impl(ctx):
   hdr = ctx.file.hdr
-  
-  include_path = "./" + get_include_path(hdr.path, ctx.attr.strip_include_prefix, 
-                                         ctx.attr.include_prefix)
-  
+   
   module_name = "./" + hdr.path
   module_out_file = ctx.actions.declare_file(hdr.basename + ".gcm")
 
+  includes = []
+  hdr_dep = [hdr]
+  outputs = [module_out_file]
+  if ctx.attr.include_path:
+    gen_dir = module_out_file.dirname + "/" + hdr.basename + "-include"
+    inc_dir = hdr.basename + "-include/" + ctx.attr.include_path 
+    hdr_mirror = ctx.actions.declare_file(inc_dir + "/" + hdr.basename)
+    hdr_dir = ctx.actions.declare_directory(hdr_mirror.dirname)
+    ctx.actions.run_shell(
+        outputs = [hdr_dir],
+        command = "mkdir -p %s" % hdr_dir.path,
+    )
+    ctx.actions.run_shell(
+        outputs = [hdr_mirror],
+        inputs = [hdr],
+        command = "cp %s %s" % (hdr.path, hdr_mirror.path),
+    )
+    includes = [
+        gen_dir
+    ]
+    hdr_dep = [hdr_mirror]
+    outputs.append(hdr_mirror)
+    hdr = hdr_mirror
+    module_name = "./" + hdr_mirror.path
+
+
   deps = ctx.attr.deps
   cc_info_deps = get_cc_info_deps(deps)
+
   module_deps = get_module_deps(deps)
+
   module_info = ModuleCompileInfo(
       module_name = module_name,
       module_file = module_out_file,
       module_dependencies = module_deps,
   )
-
   module_map = make_module_mapper(
       ctx.label.name,
       ctx.actions, 
@@ -139,13 +163,13 @@ def _cc_header_module_impl(ctx):
                            module_out=module_info)
 
   hdr_compilation_context = cc_common.create_compilation_context(
-      headers = depset([hdr]),
+      headers = depset(hdr_dep),
+      includes = depset(includes),
   )
   cc_info = CcInfo(
       compilation_context = hdr_compilation_context,
   )
   cc_info = cc_common.merge_cc_infos(cc_infos=[cc_info, cc_info_deps])
-  outputs = [module_out_file]
   return [
         DefaultInfo(files = depset(outputs)),
         cc_info,
@@ -155,8 +179,7 @@ def _cc_header_module_impl(ctx):
 
 _cc_header_module_attrs = {
   "hdr": attr.label(mandatory = True, allow_single_file = True),
-  "strip_include_prefix": attr.string(mandatory=False),
-  "include_prefix": attr.string(mandatory=False),
+  "include_path": attr.string(),
 }
 
 cc_header_module = rule(

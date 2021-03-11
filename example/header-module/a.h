@@ -1,1 +1,3 @@
-#include <iostream>
+inline const char* do_a() {
+  return "a";
+}

@@ -13,6 +13,7 @@ cc_module(
     src = "b.cc",
     deps = [
         ":a_hdr",
+        "//example/header-module/system:iostream_hdr",
     ],
     copts = [
         "-fmodules-ts",
@@ -20,11 +21,19 @@ cc_module(
     ],
 )
 
+cc_header_module(
+    name = "c_hdr",
+    hdr = "c.h",
+    include_path = "A/B/C"
+)
+
 cc_module_binary(
     name = "a.out",
     srcs = ["main.cc"],
     deps = [
         ":b",
+        ":c_hdr",
+        "//example/header-module/system:iostream_hdr",
     ],
     copts = [
         "-fmodules-ts",
