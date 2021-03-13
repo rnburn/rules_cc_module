@@ -1,9 +1,17 @@
+module;
+
+#include <string>
+
 module speech;
 
-const char* get_phrase_en() {
+/* import spanish_english_dictionary; */
+
+std::string get_phrase_en() {
     return "Hello, world!";
 }
 
-const char* get_phrase_es() {
-    return "¡Hola Mundo!";
+std::string get_phrase_es() {
+  return "abc";
+  /* return translate("Hello"); */
+    /* return std::string{"¡"} + translate("Hello") + " Mundo!"; */
 }

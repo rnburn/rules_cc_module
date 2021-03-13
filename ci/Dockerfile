@@ -1,4 +1,4 @@
-FROM rnburn/gcc-clang-build:0.3
+FROM rnburn/gcc-clang-build:0.4
 
 WORKDIR /third_party
 

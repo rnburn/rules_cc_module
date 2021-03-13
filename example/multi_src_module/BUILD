@@ -6,14 +6,29 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])
 
 cc_module(
-  name = "speech",
-  src = "speech.cc",
-  impl_srcs = [
-      "speech_impl.cc",
-  ],
+    name = "spanish_english_dictionary",
+    src = "spanish_english_dictionary.cc",
+    impl_srcs = [
+        "spanish_english_dictionary_impl.cc",
+    ],
     copts = [
         "-fmodules-ts",
         "-std=c++20",
+    ],
+)
+
+cc_module(
+    name = "speech",
+    src = "speech.cc",
+    impl_srcs = [
+        "speech_impl.cc",
+    ],
+    copts = [
+        "-fmodules-ts",
+        "-std=c++20",
+    ],
+    impl_deps = [
+        ":spanish_english_dictionary",
     ],
 )
 

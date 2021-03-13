@@ -1,4 +1,8 @@
+module;
+
+#include <string>
+
 export module speech;
 
-export const char* get_phrase_en();
-export const char* get_phrase_es();
+export std::string get_phrase_en();
+export std::string get_phrase_es();
