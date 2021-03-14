@@ -59,7 +59,7 @@ def compile_module_impl_srcs(ctx, module_name, module_out_file):
   module_map = make_module_mapper(
       ctx.label.name + "-impl_srcs",
       ctx.actions, 
-      depset(direct = [module_info], transitive = [module_impl_deps]))
+      module_impl_deps)
   compilation_context = make_module_compilation_context(
       cc_info_impl_deps, module_map, module_impl_deps) 
   compilation_context = ModuleCompilationContext(
@@ -68,13 +68,14 @@ def compile_module_impl_srcs(ctx, module_name, module_out_file):
       module_inputs = depset(
           direct = [module_out_file],
           transitive = [compilation_context.module_inputs]
-      )
+      ),
   )
 
   objs = []
   for impl_src in ctx.files.impl_srcs:
     objs += cc_module_compile_action(ctx, src=impl_src,
-                                     compilation_context=compilation_context)
+                                     compilation_context=compilation_context, 
+                                     module_info=module_info)
 
   return objs, CcInfo(linking_context=cc_info_impl_deps.linking_context)
 
@@ -99,7 +100,7 @@ def _cc_module_impl(ctx):
   objs = []
   objs += cc_module_compile_action(ctx, src=ctx.file.src, 
                                    compilation_context=compilation_context,
-                                   module_out=module_info)
+                                   module_info=module_info, is_interface=True)
 
   impl_objs, impl_cc_info = compile_module_impl_srcs(ctx, module_name, module_out_file)
   objs += impl_objs
@@ -186,7 +187,7 @@ def _cc_header_module_impl(ctx):
   compilation_context = make_module_compilation_context(cc_info_deps, module_map, module_deps)
   cc_header_module_compile_action(ctx, src=hdr,
                            compilation_context=compilation_context,
-                           module_out=module_info)
+                           module_info=module_info)
 
   hdr_compilation_context = cc_common.create_compilation_context(
       headers = depset(hdr_dep),

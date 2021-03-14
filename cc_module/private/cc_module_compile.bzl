@@ -21,7 +21,7 @@ def replace_extension(f, new_ext):
   ext = f.extension
   return f.basename[:-len(ext)]  + new_ext
 
-def cc_module_compile_action(ctx, src, compilation_context, module_out=None):
+def cc_module_compile_action(ctx, src, compilation_context, module_info=None, is_interface=False):
     cc_toolchain = find_cpp_toolchain(ctx)
 
     obj = ctx.actions.declare_file(replace_extension(src, "o"))
@@ -64,12 +64,14 @@ def cc_module_compile_action(ctx, src, compilation_context, module_out=None):
     driver_args = []
     driver_args += ['--object_out', obj.path]
     driver_args += ['--module_map', compilation_context.module_mapper.path]
+    if module_info:
+      driver_args += ['--module_name', module_info.module_name]
+      driver_args += ['--module_file', module_info.module_file.path]
 
     outputs = [obj]
-    if module_out:
-      outputs.append(module_out.module_file)
-      driver_args += ['--module_name', module_out.module_name]
-      driver_args += ['--module_out', module_out.module_file.path]
+    if is_interface:
+      outputs.append(module_info.module_file)
+      driver_args += ['--module_interface']
 
 
     ctx.actions.run(
@@ -84,7 +86,7 @@ def cc_module_compile_action(ctx, src, compilation_context, module_out=None):
     )
     return [obj]
 
-def cc_header_module_compile_action(ctx, src, compilation_context, module_out):
+def cc_header_module_compile_action(ctx, src, compilation_context, module_info):
     cc_toolchain = find_cpp_toolchain(ctx)
 
     feature_configuration = cc_common.configure_features(
@@ -125,9 +127,9 @@ def cc_header_module_compile_action(ctx, src, compilation_context, module_out):
     driver_args = []
     driver_args += ['--module_map', compilation_context.module_mapper.path]
 
-    outputs = [module_out.module_file]
-    driver_args += ['--module_name', module_out.module_name]
-    driver_args += ['--module_out', module_out.module_file.path]
+    outputs = [module_info.module_file]
+    driver_args += ['--module_name', module_info.module_name]
+    driver_args += ['--module_file', module_info.module_file.path]
 
     ctx.actions.run(
         executable = ctx.executable._driver,

@@ -6,8 +6,9 @@ from util.driver.gcc import invoke_gcc
 
 argument_parser = argparse.ArgumentParser(prog='driver')
 argument_parser.add_argument('--module_map', default=None)
+argument_parser.add_argument('--module_interface', action='store_true', default=False)
 argument_parser.add_argument('--module_name', default=None)
-argument_parser.add_argument('--module_out', default=None)
+argument_parser.add_argument('--module_file', default=None)
 argument_parser.add_argument('--object_out', default=None)
 
 def main():
