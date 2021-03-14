@@ -53,7 +53,7 @@ def cc_module_compile_action(ctx, src, compilation_context, module_out=None):
         action_name = CPP_COMPILE_ACTION_NAME,
         variables = c_compile_variables,
     )
-    command_line = command_line + ["-fmodule-mapper=%s" % compilation_context.module_mapper.path]
+    command_line = list(command_line)
     command_line += ["-iquote", "."]
 
     env = cc_common.get_environment_variables(
@@ -62,15 +62,20 @@ def cc_module_compile_action(ctx, src, compilation_context, module_out=None):
         variables = c_compile_variables,
     )
 
-    copy_files = []
+    driver_args = []
+    driver_args += ['--object_out', obj.path]
+    driver_args += ['--module_map', compilation_context.module_mapper.path]
+
     outputs = [obj]
     if module_out:
       outputs.append(module_out.module_file)
+      driver_args += ['--module_name', module_out.module_name]
+      driver_args += ['--module_out', module_out.module_file.path]
 
 
     ctx.actions.run(
         executable = ctx.executable._driver,
-        arguments = copy_files + ["--", c_compiler_path] + command_line,
+        arguments = driver_args + ["--", c_compiler_path] + command_line,
         env = env,
         inputs = depset(
             [src],
@@ -109,7 +114,7 @@ def cc_header_module_compile_action(ctx, src, compilation_context, module_out):
         action_name = CPP_COMPILE_ACTION_NAME,
         variables = c_compile_variables,
     )
-    command_line = command_line + ["-fmodule-mapper=%s" % compilation_context.module_mapper.path]
+    command_line = list(command_line)
     command_line += ["-iquote", "."]
 
     env = cc_common.get_environment_variables(
@@ -118,11 +123,16 @@ def cc_header_module_compile_action(ctx, src, compilation_context, module_out):
         variables = c_compile_variables,
     )
 
+    driver_args = []
+    driver_args += ['--module_map', compilation_context.module_mapper.path]
+
     outputs = [module_out.module_file]
+    driver_args += ['--module_name', module_out.module_name]
+    driver_args += ['--module_out', module_out.module_file.path]
 
     ctx.actions.run(
         executable = ctx.executable._driver,
-        arguments = ["--", c_compiler_path] + command_line,
+        arguments = driver_args + ["--", c_compiler_path] + command_line,
         env = env,
         inputs = depset(
             [src],

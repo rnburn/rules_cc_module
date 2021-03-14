@@ -5,10 +5,10 @@ from util.driver.clang import invoke_clang
 from util.driver.gcc import invoke_gcc
 
 argument_parser = argparse.ArgumentParser(prog='driver')
-argument_parser.add_argument('--module-map', default=None)
-argument_parser.add_argument('--module-name', default=None)
-argument_parser.add_argument('--module-output', default=None)
-argument_parser.add_argument('--object-output', default=None)
+argument_parser.add_argument('--module_map', default=None)
+argument_parser.add_argument('--module_name', default=None)
+argument_parser.add_argument('--module_out', default=None)
+argument_parser.add_argument('--object_out', default=None)
 
 def main():
     break_index = sys.argv.index('--')

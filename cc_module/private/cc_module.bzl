@@ -94,7 +94,7 @@ def _cc_module_impl(ctx):
   module_map = make_module_mapper(
       ctx.label.name,
       ctx.actions, 
-      depset(direct = [module_info], transitive = [module_deps]))
+      module_deps)
   compilation_context = make_module_compilation_context(cc_info_deps, module_map, module_deps) 
   objs = []
   objs += cc_module_compile_action(ctx, src=ctx.file.src, 
@@ -182,7 +182,7 @@ def _cc_header_module_impl(ctx):
   module_map = make_module_mapper(
       ctx.label.name,
       ctx.actions, 
-      depset(direct = [module_info], transitive = [module_deps]))
+      module_deps)
   compilation_context = make_module_compilation_context(cc_info_deps, module_map, module_deps)
   cc_header_module_compile_action(ctx, src=hdr,
                            compilation_context=compilation_context,
