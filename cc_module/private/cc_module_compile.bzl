@@ -46,7 +46,6 @@ def cc_module_compile_action(ctx, src, compilation_context, module_out=None):
         quote_include_directories = cc.quote_includes,
         system_include_directories = cc.system_includes,
         source_file = src.path,
-        output_file = obj.path,
     )
     command_line = cc_common.get_memory_inefficient_command_line(
         feature_configuration = feature_configuration,

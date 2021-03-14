@@ -16,4 +16,6 @@ def setup_module_map(driver_args):
 def invoke_gcc(driver_args, compiler, compiler_args):
     map_file = setup_module_map(driver_args)
     compiler_args += ['-fmodule-mapper=%s' % map_file]
+    if driver_args.object_out:
+        compiler_args += ['-o', driver_args.object_out]
     os.execv(compiler, [compiler] + compiler_args)
