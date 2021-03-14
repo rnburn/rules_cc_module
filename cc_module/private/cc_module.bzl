@@ -35,6 +35,11 @@ _common_attrs = {
       allow_single_file = True,
       cfg = "exec",
   ),
+  "_driver": attr.label(
+      default = Label("//util/driver"),
+      executable = True,
+      cfg = "exec",
+  ),
   "deps": attr.label_list(),
   "copts": attr.string_list(),
 }

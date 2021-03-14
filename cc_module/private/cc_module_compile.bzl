@@ -69,7 +69,7 @@ def cc_module_compile_action(ctx, src, compilation_context, module_out=None):
 
 
     ctx.actions.run(
-        executable = ctx.executable._process_wrapper,
+        executable = ctx.executable._driver,
         arguments = copy_files + ["--", c_compiler_path] + command_line,
         env = env,
         inputs = depset(
@@ -121,7 +121,7 @@ def cc_header_module_compile_action(ctx, src, compilation_context, module_out):
     outputs = [module_out.module_file]
 
     ctx.actions.run(
-        executable = ctx.executable._process_wrapper,
+        executable = ctx.executable._driver,
         arguments = ["--", c_compiler_path] + command_line,
         env = env,
         inputs = depset(

@@ -21,25 +21,25 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
-cc_module(
-    name = "Hello",
-    src = "say_hello.cc",
-    copts = [
-        "-fmodules-ts",
-        "-std=c++20",
-    ],
-)
+# cc_module(
+#     name = "Hello",
+#     src = "say_hello.cc",
+#     copts = [
+#         "-fmodules-ts",
+#         "-std=c++20",
+#     ],
+# )
 
-cc_module_binary(
-    name = "a.out",
-    srcs = [
-        "main.cc",
-    ],
-    deps = [
-        ":Hello",
-    ],
-    copts = [
-        "-fmodules-ts",
-        "-std=c++20",
-    ],
-)
+# cc_module_binary(
+#     name = "a.out",
+#     srcs = [
+#         "main.cc",
+#     ],
+#     deps = [
+#         ":Hello",
+#     ],
+#     copts = [
+#         "-fmodules-ts",
+#         "-std=c++20",
+#     ],
+# )
