@@ -29,12 +29,6 @@ load("//cc_module/private:provider.bzl", "ModuleCompileInfo", "ModuleCompilation
 
 _common_attrs = {
   "_cc_toolchain": attr.label(default = Label("@bazel_tools//tools/cpp:current_cc_toolchain")),
-  "_process_wrapper": attr.label(
-      default = Label("//util/process_wrapper"),
-      executable = True,
-      allow_single_file = True,
-      cfg = "exec",
-  ),
   "_driver": attr.label(
       default = Label("//util/driver"),
       executable = True,
