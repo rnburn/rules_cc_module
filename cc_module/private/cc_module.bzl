@@ -301,4 +301,5 @@ cc_module_binary = rule(
     toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
     incompatible_use_toolchain_transition = True,
     fragments = ["cpp"],
+    executable = True,
 )
