@@ -4,7 +4,7 @@ Rules to use C++20 modules with Bazel.
 
 ## Getting started
 
-Note: Currently only works with a recent version of gcc.
+Note: Currently only works with a recent version of clang.
 
 Build a simple module:
 ```bazel
