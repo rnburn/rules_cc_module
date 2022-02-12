@@ -1,0 +1,16 @@
+name: pr-build-test
+on: [push]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-21.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: setup build environment
+        run: |
+          ./ci/setup_build_environment.sh
+          ./ci/install_bazel.sh
+          ./ci/install_clang.sh
+      - name: Build
+        run: bazel build //...
