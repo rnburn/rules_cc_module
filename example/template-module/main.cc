@@ -1,7 +1,7 @@
-import algorithm;
+import <iostream>;
+import <vector>;
 
-#include <iostream>
-#include <vector>
+import algorithm;
 
 int main() {
   std::vector<int> v1 = {1, -9, 7};

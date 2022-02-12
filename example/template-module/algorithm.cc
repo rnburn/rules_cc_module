@@ -1,11 +1,12 @@
 module;
 
-#include <algorithm>
 #include <cassert>
-#include <type_traits>
-#include <vector>
 
 export module algorithm;
+
+import <algorithm>;
+import <type_traits>;
+import <vector>;
 
 export template <class Iter>
 auto compute_median(Iter first, Iter last) {
