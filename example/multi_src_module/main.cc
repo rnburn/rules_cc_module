@@ -1,6 +1,7 @@
-#include <iostream>
-
 import speech;
+
+import <iostream>;
+import <string>;
 
 std::string get_phrase() {
     return "Hello, world!";
@@ -9,6 +10,5 @@ std::string get_phrase() {
 int main() {
   std::cout << get_phrase() << std::endl;
   std::cout << get_phrase_en() << std::endl;
-  /* std::cout << get_phrase_es() << std::endl; */
   return 0;
 }

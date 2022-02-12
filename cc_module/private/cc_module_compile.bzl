@@ -87,7 +87,6 @@ def cc_module_compile_action(ctx, src, compilation_context, module_info=None, is
       driver_args += ['--module_interface']
 
 
-    print("*********************** compiling module...")
     ctx.actions.run(
         executable = ctx.executable._driver,
         arguments = driver_args + ["--", c_compiler_path] + command_line,
@@ -145,7 +144,6 @@ def cc_header_module_compile_action(ctx, src, compilation_context, module_info):
     driver_args += ['--module_name', module_info.module_name]
     driver_args += ['--module_file', module_info.module_file.path]
 
-    print("*********************** compiling module...")
     ctx.actions.run(
         executable = ctx.executable._driver,
         arguments = driver_args + ["--", c_compiler_path] + command_line,

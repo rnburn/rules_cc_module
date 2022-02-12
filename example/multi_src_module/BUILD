@@ -12,8 +12,14 @@ cc_module(
         "spanish_english_dictionary_impl.cc",
     ],
     copts = [
-        "-fmodules-ts",
+        "-fmodules",
+        "-fbuiltin-module-map",
+        "-stdlib=libc++",
         "-std=c++20",
+    ],
+    deps = [
+        ":_Builtin_stddef_max_align_t",
+        ":std",
     ],
 )
 
@@ -24,11 +30,18 @@ cc_module(
         "speech_impl.cc",
     ],
     copts = [
-        "-fmodules-ts",
+        "-fmodules",
+        "-fbuiltin-module-map",
+        "-fno-implicit-modules",
+        "-stdlib=libc++",
         "-std=c++20",
     ],
     impl_deps = [
         ":spanish_english_dictionary",
+    ],
+    deps = [
+        ":_Builtin_stddef_max_align_t",
+        ":std",
     ],
 )
 
@@ -37,11 +50,42 @@ cc_module_binary(
     srcs = [
         "main.cc",
     ],
+    copts = [
+        "-fmodules",
+        "-fbuiltin-module-map",
+        "-fno-implicit-modules",
+        "-stdlib=libc++",
+        "-std=c++20",
+    ],
     deps = [
         ":speech",
     ],
+    linkopts = [
+        "-stdlib=libc++",
+    ],
+)
+
+cc_module(
+    name = "_Builtin_stddef_max_align_t",
+    is_system = True,
     copts = [
-        "-fmodules-ts",
+        "-fmodules",
+        "-fbuiltin-module-map",
+        "-stdlib=libc++",
         "-std=c++20",
+    ],
+)
+
+cc_module(
+    name = "std",
+    is_system = True,
+    copts = [
+        "-fmodules",
+        "-fbuiltin-module-map",
+        "-stdlib=libc++",
+        "-std=c++20",
+    ],
+    deps = [
+        ":_Builtin_stddef_max_align_t",
     ],
 )
