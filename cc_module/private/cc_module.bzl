@@ -36,6 +36,7 @@ _common_attrs = {
   ),
   "deps": attr.label_list(),
   "copts": attr.string_list(),
+  "linkopts": attr.string_list(),
 }
 
 ###########################################################################################
@@ -74,9 +75,14 @@ def compile_module_impl_srcs(ctx, module_name, module_out_file):
   return objs, CcInfo(linking_context=cc_info_impl_deps.linking_context)
 
 def _cc_module_impl(ctx):
+  if ctx.attr.is_system and ctx.file.src:
+    fail("src must not be specified if is_system is True")
+  if not ctx.file.src and not ctx.attr.is_system:
+    fail("src must be specified")
+
   module_name = ctx.label.name
   archive_out_file = ctx.actions.declare_file(module_name + ".a")
-  module_out_file = ctx.actions.declare_file(module_name + ".gcm")
+  module_out_file = ctx.actions.declare_file(module_name + ".pcm")
   deps = ctx.attr.deps
   cc_info_deps = get_cc_info_deps(deps)
   module_deps = get_module_deps(deps)
@@ -92,9 +98,10 @@ def _cc_module_impl(ctx):
       module_deps)
   compilation_context = make_module_compilation_context(cc_info_deps, module_map, module_deps) 
   objs = []
-  objs += cc_module_compile_action(ctx, src=ctx.file.src, 
+  objs += cc_module_compile_action(ctx, src=ctx.file.src,
                                    compilation_context=compilation_context,
-                                   module_info=module_info, is_interface=True)
+                                   module_info=module_info, is_interface=True, 
+                                   is_system=ctx.attr.is_system)
 
   impl_objs, impl_cc_info = compile_module_impl_srcs(ctx, module_name, module_out_file)
   objs += impl_objs
@@ -109,16 +116,20 @@ def _cc_module_impl(ctx):
       linking_context = linking_context
   )
   cc_info = cc_common.merge_cc_infos(cc_infos=[cc_info, impl_cc_info, cc_info_deps])
+  dep_files = outputs
+  if ctx.file.src:
+    dep_files += [ctx.file.src]
   return [
-        DefaultInfo(files = depset(outputs)),
+        DefaultInfo(files = depset(dep_files)),
         cc_info,
         module_info,
   ]
 
 _cc_module_attrs = {
-  "src": attr.label(mandatory = True, allow_single_file = True),
+  "src": attr.label(mandatory = False, allow_single_file = True),
   "impl_srcs": attr.label_list(mandatory=False, allow_files=True),
   "impl_deps": attr.label_list(),
+  "is_system": attr.bool(default=False),
 }
 
 cc_module = rule(

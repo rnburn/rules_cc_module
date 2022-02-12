@@ -1,2 +1,0 @@
--fmodule-file=spanish_english_dictionary=bazel-out/k8-fastbuild/bin/example/multi_src_module/spanish_english_dictionary.gcm
--fmodule-file=bazel-out/k8-fastbuild/bin/example/multi_src_module/speech.pcm

@@ -1,7 +1,7 @@
 // main.cc
 import Hello;
 
-#include <string_view>
+import <string_view>;
 
 int main() {
   SayHello("world");

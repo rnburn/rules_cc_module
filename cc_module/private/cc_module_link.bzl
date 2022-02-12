@@ -59,8 +59,11 @@ def cc_module_link_action(ctx, objs, linking_context, exe):
     ld, link_args, link_env = get_linker_and_args(ctx, cc_toolchain, feature_configuration, 
                                                   depset(), exe.path)
 
+    linkopts = getattr(ctx.attr, "linkopts", [])
+
     args = ctx.actions.args()
     args.add_all(link_args)
+    args.add_all(linkopts)
     args.add_all(objs)
     
     inputs = []

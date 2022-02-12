@@ -21,9 +21,20 @@ def replace_extension(f, new_ext):
   ext = f.extension
   return f.basename[:-len(ext)]  + new_ext
 
-def cc_module_compile_action(ctx, src, compilation_context, module_info=None, is_interface=False):
+def make_source(ctx, src, module_info):
+  src = ctx.actions.declare_file('%s.cc' % module_info.module_name)
+  cmd = "touch %s" % src.path
+  ctx.actions.run_shell(
+      outputs = [src],
+      command = cmd,
+  )
+  return src
+
+def cc_module_compile_action(ctx, src, compilation_context, module_info=None, is_interface=False, is_system=False):
     cc_toolchain = find_cpp_toolchain(ctx)
 
+    if not src:
+      src = make_source(ctx, src, module_info)
     obj = ctx.actions.declare_file(replace_extension(src, "o"))
 
     feature_configuration = cc_common.configure_features(
@@ -64,6 +75,8 @@ def cc_module_compile_action(ctx, src, compilation_context, module_info=None, is
     driver_args = []
     driver_args += ['--object_out', obj.path]
     driver_args += ['--module_map', compilation_context.module_mapper.path]
+    if is_system:
+      driver_args += ['--is_system']
     if module_info:
       driver_args += ['--module_name', module_info.module_name]
       driver_args += ['--module_file', module_info.module_file.path]
@@ -74,6 +87,7 @@ def cc_module_compile_action(ctx, src, compilation_context, module_info=None, is
       driver_args += ['--module_interface']
 
 
+    print("*********************** compiling module...")
     ctx.actions.run(
         executable = ctx.executable._driver,
         arguments = driver_args + ["--", c_compiler_path] + command_line,
@@ -104,7 +118,7 @@ def cc_header_module_compile_action(ctx, src, compilation_context, module_info):
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
         user_compile_flags = ctx.fragments.cpp.copts + ctx.fragments.cpp.conlyopts + \
-            ["-x", "c++-header", "-fmodules-ts", "-std=c++20"],
+            ["-x", "c++-header", "-fmodules", "-std=c++20"],
         include_directories = cc.includes,
         quote_include_directories = cc.quote_includes,
         system_include_directories = cc.system_includes,
@@ -131,6 +145,7 @@ def cc_header_module_compile_action(ctx, src, compilation_context, module_info):
     driver_args += ['--module_name', module_info.module_name]
     driver_args += ['--module_file', module_info.module_file.path]
 
+    print("*********************** compiling module...")
     ctx.actions.run(
         executable = ctx.executable._driver,
         arguments = driver_args + ["--", c_compiler_path] + command_line,

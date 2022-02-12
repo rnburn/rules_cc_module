@@ -21,25 +21,63 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
-# cc_module(
-#     name = "Hello",
-#     src = "say_hello.cc",
-#     copts = [
-#         "-fmodules-ts",
-#         "-std=c++20",
-#     ],
-# )
+cc_module(
+    name = "Hello",
+    src = "say_hello.cc",
+    copts = [
+        "-fmodules",
+        "-fbuiltin-module-map",
+        "-stdlib=libc++",
+        "-std=c++20",
+    ],
+    deps = [
+        ":_Builtin_stddef_max_align_t",
+        ":std",
+    ],
+)
 
-# cc_module_binary(
-#     name = "a.out",
-#     srcs = [
-#         "main.cc",
-#     ],
-#     deps = [
-#         ":Hello",
-#     ],
-#     copts = [
-#         "-fmodules-ts",
-#         "-std=c++20",
-#     ],
-# )
+cc_module_binary(
+    name = "a.out",
+    srcs = [
+        "main.cc",
+    ],
+    deps = [
+        ":Hello",
+        ":_Builtin_stddef_max_align_t",
+        ":std",
+    ],
+    copts = [
+        "-fmodules",
+        "-fbuiltin-module-map",
+        "-stdlib=libc++",
+        "-std=c++20",
+    ],
+    linkopts = [
+        "-stdlib=libc++",
+    ],
+)
+
+cc_module(
+    name = "_Builtin_stddef_max_align_t",
+    is_system = True,
+    copts = [
+        "-fmodules",
+        "-fbuiltin-module-map",
+        "-stdlib=libc++",
+        "-std=c++20",
+    ],
+)
+
+cc_module(
+    name = "std",
+    is_system = True,
+    copts = [
+        "-fmodules",
+        "-fbuiltin-module-map",
+        "-stdlib=libc++",
+        "-std=c++20",
+    ],
+    deps = [
+        ":_Builtin_stddef_max_align_t",
+    ],
+)
