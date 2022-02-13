@@ -35,7 +35,10 @@ def cc_module_compile_action(ctx, src, compilation_context, module_info=None, is
 
     if not src:
       src = make_source(ctx, src, module_info)
-    obj = ctx.actions.declare_file("cc_module_detail-" + replace_extension(src, "o"))
+    obj_name = replace_extension(src, "o")
+    if is_interface:
+      obj_name = "cc_module_interface-" + obj_name
+    obj = ctx.actions.declare_file(obj_name)
 
     feature_configuration = cc_common.configure_features(
         ctx = ctx,
