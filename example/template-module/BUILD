@@ -52,6 +52,20 @@ cc_module(
 )
 
 cc_module(
+    name = "std_config",
+    is_system = True,
+    copts = [
+        "-fmodules",
+        "-fbuiltin-module-map",
+        "-stdlib=libc++",
+        "-std=c++20",
+    ],
+    deps = [
+        ":_Builtin_stddef_max_align_t",
+    ],
+)
+
+cc_module(
     name = "std",
     is_system = True,
     copts = [
@@ -62,5 +76,6 @@ cc_module(
     ],
     deps = [
         ":_Builtin_stddef_max_align_t",
+        ":std_config",
     ],
 )
