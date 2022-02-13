@@ -68,6 +68,9 @@ cc_binary(
 )
 ```
 
+## Documentation
+[How to Use C++20 Modules with Bazel](https://buildingblock.ai/cpp20-modules-bazel).
+
 ## Examples
 The directory [example](https://github.com/rnburn/bazel-cpp20-modules/tree/main/example) demonstrates 
 usage and there is a docker image that provides a build environment. To build the examples,
