@@ -22,8 +22,8 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])
 
 cc_module(
-    name = "Hello",
-    src = "say_hello.cc",
+    name = "hello",
+    src = "hello.ixx",
     copts = [
         "-fmodules",
         "-fbuiltin-module-map",
@@ -42,7 +42,7 @@ cc_module_binary(
         "main.cc",
     ],
     deps = [
-        ":Hello",
+        ":hello",
         ":_Builtin_stddef_max_align_t",
         ":std",
     ],

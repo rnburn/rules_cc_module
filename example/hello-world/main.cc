@@ -1,9 +1,9 @@
 // main.cc
-import Hello;
+import hello;
 
 import <string_view>;
 
 int main() {
-  SayHello("world");
+  say_hello("world");
   return 0;
 }
