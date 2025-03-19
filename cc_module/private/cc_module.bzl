@@ -140,6 +140,74 @@ cc_module = rule(
     fragments = ["cpp"],
 )
 
+
+###########################################################################################
+# cc_compiled_module
+###########################################################################################
+def _cc_compiled_module_impl(ctx):
+  hdr = ctx.file.cmi
+   
+  module_name = "./" + hdr.path
+  module_out_file = ctx.actions.declare_file(hdr.basename)
+
+  includes = []
+  hdr_dep = [hdr]
+  outputs = [module_out_file]
+
+  deps = ctx.attr.deps
+  cc_info_deps = get_cc_info_deps(deps)
+
+  module_deps = get_module_deps(deps)
+
+  module_info = ModuleCompileInfo(
+      module_name = module_name,
+      module_file = module_out_file,
+      module_dependencies = module_deps,
+  )
+  module_map = make_module_mapper(
+      ctx.label.name,
+      ctx.actions, 
+      module_deps)
+  compilation_context = make_module_compilation_context(cc_info_deps, module_map, module_deps)
+  # ================ WORKAROUND ===============
+  #cc_header_module_compile_action(ctx, src=hdr,
+  #                         compilation_context=compilation_context,
+  #                         module_info=module_info)
+  #
+  # HELP: I just need to pass .gcm / .pcm file directly to bazel, so I fake it here...
+  ctx.actions.run_shell(
+    outputs = [module_out_file],
+    command = "touch %s" % module_out_file.path,
+  )
+  # ===========================================
+
+  hdr_compilation_context = cc_common.create_compilation_context(
+      headers = depset(hdr_dep),
+      includes = depset(includes),
+  )
+  cc_info = CcInfo(
+      compilation_context = hdr_compilation_context,
+  )
+  cc_info = cc_common.merge_cc_infos(cc_infos=[cc_info, cc_info_deps])
+  return [
+        DefaultInfo(files = depset(outputs)),
+        cc_info,
+        module_info,
+  ]
+
+
+_cc_compiled_module_attrs = {
+  "cmi": attr.label(mandatory = True, allow_single_file = True),
+}
+
+cc_compiled_module = rule(
+    implementation = _cc_compiled_module_impl,
+    attrs = dict(_common_attrs.items() + _cc_compiled_module_attrs.items()),
+    toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
+    incompatible_use_toolchain_transition = True,
+    fragments = ["cpp"],
+)
+
 ###########################################################################################
 # cc_header_module
 ###########################################################################################
