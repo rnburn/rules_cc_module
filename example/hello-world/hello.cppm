@@ -1,4 +1,4 @@
-// hello.ixx
+// hello.cppm
 export module hello;
 
 import <iostream>;
